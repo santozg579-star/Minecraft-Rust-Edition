@@ -14,7 +14,7 @@ fn main() {
         .add_plugins(DefaultPlugins.set(WindowPlugin {
             primary_window: Some(Window {
                 title: "Minecraft Rust Edition".into(),
-                resolution: (960., 540.).into(),
+                resolution: (960_f32, 540_f32).into(),
                 ..default()
             }),
             ..default()
@@ -77,7 +77,7 @@ fn terrain_height(x: i32, z: i32) -> i32 {
 fn look_controls(
     time: Res<Time>,
     mouse: Res<ButtonInput<MouseButton>>,
-    mut motion: MessageReader<bevy::input::mouse::MouseMotion>,
+    mut motion: EventReader<bevy::input::mouse::MouseMotion>,
     mut camera: Query<&mut Transform, With<PlayerCamera>>,
 ) {
     if !mouse.pressed(MouseButton::Left) { return; }
