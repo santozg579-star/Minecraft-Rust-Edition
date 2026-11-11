@@ -1,2 +1,5 @@
-# Android linker configuration depends on the installed Android NDK version.
-# Set the linker path for aarch64-linux-android after configuring the NDK.
+[target.aarch64-linux-android]
+linker = "/root/projetos/Minecraft-Rust-Edition/.cargo/android-aarch64-linker.sh"
+rustflags = [
+    "-C", "link-arg=-Wl,-z,max-page-size=16384"
+]

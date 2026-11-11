@@ -7,7 +7,13 @@ license = "MIT"
 
 [dependencies]
 bevy = { version = "0.16", default-features = false, features = [
-  "android-game-activity", "bevy_asset", "bevy_render", "bevy_core_pipeline",
-  "bevy_pbr", "bevy_gltf", "bevy_scene", "bevy_winit", "bevy_window",
+  "bevy_asset", "bevy_render", "bevy_core_pipeline",
+  "bevy_pbr", "bevy_gltf", "bevy_scene", "bevy_winit", "bevy_window", "x11",
   "multi_threaded", "png", "tonemapping_luts", "default_font"
 ] }
+
+[lib]
+crate-type = ["cdylib"]
+
+[target.'cfg(target_os = "android")'.dependencies]
+bevy = { version = "0.16", default-features = false, features = ["android-game-activity"] }
