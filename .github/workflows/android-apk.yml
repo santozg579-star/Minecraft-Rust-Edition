@@ -51,6 +51,7 @@ jobs:
           curl -fsSL https://github.com/bevyengine/bevy/archive/refs/tags/v0.16.1.tar.gz | tar -xz -C "$RUNNER_TEMP"
           mkdir -p android
           cp -a "$RUNNER_TEMP/bevy-0.16.1/examples/mobile/android_example/." android/
+          sed -i 's/gamesActivity = "2.0.2"/gamesActivity = "4.4.0"/' android/gradle/libs.versions.toml
           python3 - <<'PYTHON'
           from pathlib import Path
 
