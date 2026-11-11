@@ -1,0 +1,2 @@
+# Android linker configuration depends on the installed Android NDK version.
+# Set the linker path for aarch64-linux-android after configuring the NDK.

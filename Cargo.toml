@@ -1,0 +1,13 @@
+[package]
+name = "minecraft-rust-edition"
+version = "0.2.0"
+edition = "2024"
+description = "Voxel sandbox prototype for Android, built with Rust and Bevy"
+license = "MIT"
+
+[dependencies]
+bevy = { version = "0.16", default-features = false, features = [
+  "android-game-activity", "bevy_asset", "bevy_render", "bevy_core_pipeline",
+  "bevy_pbr", "bevy_gltf", "bevy_scene", "bevy_winit", "bevy_window",
+  "multi_threaded", "png", "tonemapping_luts", "default_font"
+] }
