@@ -1,0 +1,90 @@
+name: Build Android APK
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: Build ARM64 APK
+    runs-on: ubuntu-22.04
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Set up Android SDK
+        uses: android-actions/setup-android@v3
+
+      - name: Install Android SDK components
+        run: |
+          sdkmanager "platforms;android-34" "build-tools;34.0.0" "ndk;27.2.12479018" "cmake;3.22.1"
+          echo "ANDROID_NDK_HOME=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_HOME/ndk/27.2.12479018" >> "$GITHUB_ENV"
+          echo "CARGO_TARGET_AARCH64_LINUX_ANDROID_LINKER=$ANDROID_HOME/ndk/27.2.12479018/toolchains/llvm/prebuilt/linux-x86_64/bin/aarch64-linux-android31-clang" >> "$GITHUB_ENV"
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android
+
+      - name: Install cargo-ndk
+        run: cargo install cargo-ndk --locked
+
+      - name: Prepare Bevy Android project
+        run: |
+          curl -fsSL https://github.com/bevyengine/bevy/archive/refs/tags/v0.16.1.tar.gz | tar -xz -C "$RUNNER_TEMP"
+          mkdir -p android
+          cp -a "$RUNNER_TEMP/bevy-0.16.1/examples/mobile/android_example/." android/
+          python3 - <<'PY'
+          from pathlib import Path
+
+          p = Path("android/app/build.gradle")
+          s = p.read_text()
+          s = s.replace("org.bevyengine.example", "com.minecraftrustedition.game")
+          s = s.replace("assets.srcDirs += files('../../../../assets')", "assets.srcDirs += files('../../../assets')")
+          s = s.replace("res.srcDirs += files('../../../../assets/android-res')", "")
+          p.write_text(s)
+
+          p = Path("android/app/src/main/AndroidManifest.xml")
+          s = p.read_text()
+          s = s.replace('android:icon="@mipmap/ic_launcher"', '')
+          s = s.replace('android:roundIcon="@mipmap/ic_launcher"', '')
+          s = s.replace('android:label="Bevy Example"', 'android:label="Minecraft Rust Edition"')
+          s = s.replace('android:value="bevy_mobile_example"', 'android:value="minecraft_rust_edition"')
+          p.write_text(s)
+
+          old = Path("android/app/src/main/java/org/bevyengine/example/MainActivity.java")
+          s = old.read_text()
+          s = s.replace("package org.bevyengine.example;", "package com.minecraftrustedition.game;")
+          s = s.replace("bevy_mobile_example", "minecraft_rust_edition")
+          new = Path("android/app/src/main/java/com/minecraftrustedition/game/MainActivity.java")
+          new.parent.mkdir(parents=True, exist_ok=True)
+          new.write_text(s)
+          old.unlink()
+          PY
+
+      - name: Build Rust library
+        run: cargo ndk -t arm64-v8a -P 31 -o android/app/src/main/jniLibs build --release --lib
+
+      - name: Build APK
+        working-directory: android
+        run: ./gradlew --no-daemon assembleDebug
+
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Minecraft-Rust-Edition-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          if-no-files-found: error
+          retention-days: 14
